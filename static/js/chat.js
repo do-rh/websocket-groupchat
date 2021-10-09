@@ -34,7 +34,12 @@ ws.onmessage = function (evt) {
     item = $(`<li><b>${msg.name}: </b>${msg.text}</li>`);
   } else if (msg.type === "joke") {
     item = $(`<li><b>${msg.name}: </b>${msg.text}</li>`);
-  } else {
+  } else if (msg.type === "members") {
+    item = $(`<li><b>${msg.name}: </b>${msg.text}</li>`);
+  } else if (msg.type === "priv") {
+    item = $(`<li><b>${msg.name}: </b>${msg.text}</li>`);
+  }
+  else {
     return console.error(`bad message: ${msg}`);
   }
 
@@ -60,13 +65,20 @@ ws.onclose = function (evt) {
 
 $("form").submit(function (evt) {
   evt.preventDefault();
-  let data
+  let data;
   if ($("#m").val() === '/joke') {
     data = { type: "joke", text: $("#m").val() };
-  } else {
+  } else if ($("#m").val() === '/members') {
+    data = { type: "members", text: $("#m").val() };
+  } else if ($("#m").val().includes('/priv')) {
+    data = { type: "priv", text: $("#m").val() };
+  } else if ($("#m").val().includes('/name')) {
+    data = { type: "name", text: $("#m").val() };
+  }
+  else {
     data = { type: "chat", text: $("#m").val() };
   }
-   ws.send(JSON.stringify(data));
+  ws.send(JSON.stringify(data));
 
   $("#m").val("");
 });

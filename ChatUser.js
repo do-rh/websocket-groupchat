@@ -74,8 +74,72 @@ class ChatUser {
       type: "joke",
       text: joke,
     };
-    console.log('data is: ', data, 'this.name is: ', this.name);
+    // console.log('data is: ', data, 'this.name is: ', this.name);
     this.room.privateMsg(data, this)
+  }
+
+  /** Handle members req: send all members list to user.
+ *
+ * @param text {string} message to send
+ * */
+
+  handleMembers() {
+    const members = this.room.members;
+    // console.log(this.room.members, "this.room.members");
+    const membersInfo = [];
+    for (let member of members) {
+      membersInfo.push(member.name);
+    }
+    const membersRes = membersInfo.join(", ");
+    const data = {
+      name: "Members list",
+      type: "members",
+      text: membersRes,
+    };
+    // console.log('data is: ', data, 'this.name is: ', this.name);
+    this.room.privateMsg(data, this);
+  }
+
+  /** Handle private messages: send a direct private message to another user.
+*
+* @param text {string} message to send
+* */
+
+  handlePriv(text) {
+    const content = text.split(" ").filter(el => el)
+
+    const toMember = content[1];
+    const message = content.slice(2).join(" ");
+    for (let member of this.room.members) {
+      if (member.name === toMember) {
+        const data = {
+          name: `private message from ${this.name}`,
+          type: "priv",
+          text: message,
+        };
+        // console.log('data is: ', data, 'this.name is: ', this.name);
+        this.room.privateMsg(data, member);
+      }
+    }
+  }
+
+  /** Handle name change: change a user's name and broadcast to group.
+  *
+  * @param text {string} message to send
+  * */
+
+  handleNameChange(text) {
+    const content = text.split(" ").filter(el => el)
+    const newName = content[1];
+
+    const data = {
+      name: "announcement",
+      type: "chat",
+      text: `${this.name} has decided to change their name to ${newName}`,
+    }
+    // console.log('data is: ', data, 'this.name is: ', this.name);
+    this.room.broadcast(data);
+    this.name = newName;
   }
 
   /** Handle messages from client:
@@ -92,8 +156,11 @@ class ChatUser {
     let msg = JSON.parse(jsonData);
 
     if (msg.type === 'joke') this.handleJoke();
-    if (msg.type === "join") this.handleJoin(msg.name);
+    else if (msg.type === "join") this.handleJoin(msg.name);
     else if (msg.type === "chat") this.handleChat(msg.text);
+    else if (msg.type === "members") this.handleMembers();
+    else if (msg.type === "priv") this.handlePriv(msg.text);
+    else if (msg.type === "name") this.handleNameChange(msg.text);
     else throw new Error(`bad message: ${msg.type}`);
   }
 
